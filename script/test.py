@@ -1,6 +1,7 @@
-import olxHandler
+import linkMenager
 
-olx = olxHandler.searchOlx(word="lego")
-olx.changeSortOrder('new')
-result = olx.search()
-print(result)
+
+lm = linkMenager.Menager("oddam")
+olx_links = lm.getLinksOlx()
+sorted_olx_links = lm.sortNewest(olx_links)
+lm.saveOlx(sorted_olx_links)

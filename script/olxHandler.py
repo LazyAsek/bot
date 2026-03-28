@@ -1,16 +1,6 @@
 
-"""otworz strone olx
-wyszukaj slowo
-wybierz sortowanie
-podaj ilosc rekordow do zwrocenia
-z kazdego recordu
-- nazwa
-- cena
-- orginalna cena( placholder )
-- link
-"""
-
 import openSite
+from bs4 import BeautifulSoup
 
 class searchOlx:
 
@@ -42,8 +32,26 @@ class searchOlx:
     #open olx site wtih given word ssearched and apropriate search order
     def search(self):
         complete_url ="https://www.olx.pl/oferty/q-"+self.word+""+self.sort
-        olx_page = openSite.Site(page=complete_url,timeout=2000)
-        return olx_page.GetSite()
+        print(complete_url)
+        olx_page = openSite.Site(page=complete_url,timeout=1000,headless=True)
+        olx_code = olx_page.GetSite(find='div[data-testid="l-card"]')
+        return olx_code
+    
+    #get <a> without inner html
+    def clear(self,olx_code):
+
+        elems=[]
+        #look through all div[data-testid="l-card"]
+        for bit in olx_code:
+            soup = BeautifulSoup(bit,"html.parser")
+            #get all a containers 
+            links = soup.find_all('a')
+            for l in links:
+                #separate link and format it
+                unknown = l['href']
+                formated_link = unknown if unknown.startswith('http') else f"https://www.olx.pl/{unknown}"
+                elems.append(formated_link) 
+        return set(elems)
 
         
  
