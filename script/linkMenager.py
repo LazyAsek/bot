@@ -3,7 +3,7 @@
 import olxHandler
 import os
 
-class Menager:
+class linkMenager:
 
     #initialize
     def __init__(self,word):
@@ -11,25 +11,25 @@ class Menager:
 
     #gets links from olx return: set
     def getLinksOlx(self):
-        olx = olxHandler.searchOlx(self.word)
+        olx = olxHandler.olxHandler(self.word)
         olx.changeSortOrder('new')
-        result = olx.search()
+        result = olx.search('div[data-testid="l-card"]')
         clean_result = olx.clear(result)
         return clean_result
 
     #saves links in txt separated into newand old ones format: new,count,links old,count,links
     def saveOlx(self,data):
-        with open(f"data/olx_links_{self.word}.txt","w") as f:
+        with open(f"script/data/olx_links_{self.word}.txt","w") as f:
             for l in data:
                 f.write(l+"\n")
             f.close()
     
     def sortNewest(self,data):
-        if  not os.path.exists(f"data/olx_links_{self.word}.txt"):
+        if  not os.path.exists(f"script/data/olx_links_{self.word}.txt"):
             return data
         new= set()
         old = set()
-        with open(f"data/olx_links_{self.word}.txt","r") as f:
+        with open(f"script/data/olx_links_{self.word}.txt","r") as f:
             links = set(f.readlines())
             for l in data:
                 if l == "new:" or l =="old:":

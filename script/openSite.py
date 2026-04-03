@@ -2,16 +2,16 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 
-class Site:
+class OpenSite:
     #basic params for opening browser site
     with sync_playwright() as p:
             basic_user_agent = p.devices['Desktop Chrome']['user_agent']
     URL = "https://google.com/"
 
     #initialization with optional change of params
-    def __init__(self,page = URL,user_agent = basic_user_agent,timeout=0,headless=False):
+    def __init__(self,url = URL,user_agent = basic_user_agent,timeout=0,headless=False):
 
-            self.URL = page
+            self.URL = url
             self.user_agent = user_agent
             self.timeout = timeout
             self.headless=headless
@@ -23,41 +23,24 @@ class Site:
     def ChangeURL(self,url):
         self.URL = url
 
-    #opens site and return content of it
-    def GetSite(self,find):
-        with sync_playwright() as p:
-            #lounch browser
-            browser = p.chromium.launch(headless=self.headless)
-            page = browser.new_page(user_agent=self.user_agent)
+    #opens site and return playwright page of it
+    def GetSite(self):
+        """
+        return ; page browser
+        """
+        #lounch browser
+        p = sync_playwright().start()
+        browser = p.chromium.launch(headless=self.headless)
+        page = browser.new_page(user_agent=self.user_agent)
 
-            #scroll to the bottom and wait to load a page
-            page.goto(self.URL)
-            page.wait_for_load_state("domcontentloaded")
-            page.click("#onetrust-accept-btn-handler")
+        #scroll to the bottom and wait to load a page
+        page.goto(self.URL)
+        page.wait_for_load_state("domcontentloaded")
+        page.click("#onetrust-accept-btn-handler")
+        return [page,browser]
 
-            previous_count = 0
-            for i in range(15): 
-                page.keyboard.press("End")
-                page.wait_for_timeout(2500) 
-                
-                current_count = page.locator(find).count()
-                
-                
-                if current_count > previous_count:
-                    previous_count = current_count
-                else:
-                    page.wait_for_timeout(2000)
-                    if page.locator(find).count() == previous_count:
-                        break
-
-            #get all locator objects
-            locator_elements = page.locator(find).all()
-            #convert to html
-            html_elements=[loc.evaluate("el => el.outerHTML") for loc in locator_elements]
             
-            browser.close()
-            return html_elements
-        
+    # return page to look
     def checkSite(self,time=10000):
             with sync_playwright() as p:
                 #lounch browser
@@ -67,8 +50,54 @@ class Site:
                 #scroll to the bottom and wait to load a page
                 page.goto(self.URL)
                 page.wait_for_timeout(time) 
-                browser.close()
+                return [page,browser]
     
+    
+    def parsePage(self,page,find):
+        """
+        smaple div syntax search  'div[data-testid="l-card"]'
+        return type; playwright page object
+        """
+        previous_count = 0
+        for i in range(15): 
+            page.keyboard.press("End")
+            page.wait_for_timeout(2500) 
+                
+            current_count = page.locator(find).count()
+                
+                
+            if current_count > previous_count:
+                previous_count = current_count
+            else:
+                page.wait_for_timeout(2000)
+                if page.locator(find).count() == previous_count:
+                    break
+
+        #get all locator objects
+        locator_element = page.locator(find)
+        return locator_element
+    
+    def parsePWObjects(self,object,find):
+         return object.locator(find).all()
+        
+    def convertToHTML(self,locator_elements):
+        #convert to html
+        html_elements=[loc.evaluate("el => el.outerHTML") for loc in locator_elements]
+            
+        return html_elements
+    
+    def convertToSoup(self,html_text):
+         return BeautifulSoup(html_text,'html.parser')
+    
+    def getInnerText(self,tag,soup):
+        cur = []
+        for container in soup.find(tag).contents:
+            cur.append(str(container))
+       
+        return cur
+    
+    def close(self,browser):
+        browser.close()
          
       
 
