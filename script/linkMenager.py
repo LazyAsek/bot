@@ -11,6 +11,10 @@ class linkMenager:
 
     #gets links from olx return: set
     def getLinksOlx(self):
+        """
+        gets links of the page by data-testid="l-card
+        return ; list[String]
+        """
         olx = olxHandler.olxHandler(self.word)
         olx.changeSortOrder('new')
         result = olx.search('div[data-testid="l-card"]')
@@ -19,12 +23,25 @@ class linkMenager:
 
     #saves links in txt separated into newand old ones format: new,count,links old,count,links
     def saveOlx(self,data):
+        """
+        save links in olx_links{name}.txt
+        return ; None
+        """
         with open(f"script/data/olx_links_{self.word}.txt","w") as f:
             for l in data:
                 f.write(l+"\n")
             f.close()
     
     def sortNewest(self,data):
+        """
+        retunr list of links sorted to list
+        format:
+        new
+        links
+        old
+        links
+        return ; list[string]
+        """
         if  not os.path.exists(f"script/data/olx_links_{self.word}.txt"):
             return data
         new= set()

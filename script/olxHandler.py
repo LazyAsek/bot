@@ -11,10 +11,17 @@ class olxHandler:
 
     #change sort orders from possible orders
     def changeSortOrder(self,new):
+        """
+        foru, new, cheap, expensive
+        if not exsits defoult new descending
+        """
         self.sort = self.__chooseSortOrder(new)
 
     #check if search order exsist (if not go to def) adn return url part needed for search
     def __chooseSortOrder(self,order):
+        """
+        return; string
+        """
         #possible orders and transletion of them to url fragment responsible for order
         poss = {'foru':"/?search%5Border%5D=relevance:desc",
                 'new':"/?search%5Border%5D=created_at:desc",
@@ -34,6 +41,9 @@ class olxHandler:
     #basic search without tags
     # smaple div syntax search  'div[data-testid="l-card"]'
     def open(self):
+        """
+        opens browser with given olx url in /oferty
+        """
         complete_url ="https://www.olx.pl/oferty/"+self.word+""+self.sort
         print(complete_url)
         self.os = openSite.OpenSite(url=complete_url,timeout=1000,headless=True)
@@ -48,28 +58,42 @@ class olxHandler:
     #dynamiczne sciagniecie opcji
     def pullTags(self):
         """
-        gets all tags without category and price
+        gets all tags 
+        without category and price
+        esge case for kolor exists
+
+        dict[name] = options
+        return ; dict[string] = list[strings]
         """
+        #find place with filters
         self.open()
         filters= self.os.parsePage(page=self.page,find='div[data-testid="listing-filters"]')
         
+        #get categories andput them to list
         categories = self.os.parsePWObjects(object=filters,find='div[data-testid="multi-select-filter"]')
+
+        #site pulls possible options for given category dynamicly 
+        #here we pull name to button that expands options
         name_to_button=[]
         for i in range(0,len(categories)):
 
             soup_name = self.os.convertToSoup(self.os.convertToHTML(self.os.parsePWObjects(object=categories[i],find='span'))[0])
             name_to_button.append([self.os.getInnerText('span',soup_name)[0] , self.os.parsePWObjects(object=categories[i],find='button')[0]])
  
+        #after clicking button pull options and put them to dict
         name_to_options={}
         for i in range(0,len(categories)):
             
+            #click each button
             name = name_to_button[i][0]
             name_to_button[i][1].click()
 
+            #get options content
             option_list = self.os.parsePWObjects(object=categories[i],find='div[data-testid="flyout-content"]')[0]
             options_locator = self.os.parsePWObjects(object=option_list,find='p')
             options_html = self.os.convertToHTML(options_locator)
 
+            #extract options from html code
             options=[]
             for o in options_html:
                 soup = self.os.convertToSoup(o)
@@ -90,11 +114,14 @@ class olxHandler:
     #get <a> without inner html
     #returns list of unique offers
     def clear(self,olx_html):
-
+        """
+        looks through links, get them with from <a> container and put them in proper link format
+        return ; set(string)
+        """
         elems=[]
         #look through all div[data-testid="l-card"]
         for bit in olx_html:
-            soup = BeautifulSoup(bit,"html.parser")
+            soup = self.os.convertToSoup(bit)
             #get all a containers 
             links = soup.find_all('a')
             for l in links:
